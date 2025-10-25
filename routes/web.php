@@ -3,11 +3,10 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\PacienteController;
-use App\Http\Controllers\TipoAnalisisController;
-use App\Http\Controllers\OrdenAnalisisController;
 use App\Http\Controllers\MuestraController;
+use App\Http\Controllers\OrdenAnalisisController;
 use App\Http\Controllers\ResultadoController;
-use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\TipoAnalisisController;
 use Illuminate\Support\Facades\Route;
 
 // Ruta pública de inicio
@@ -25,13 +24,28 @@ Route::post('/registro', [RegistroController::class, 'registrar']);
 
 // Rutas protegidas (requieren autenticación)
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // ==================== PACIENTES ====================
-    Route::prefix('pacientes')->group(function () {
+    // Rutas del sistema
+    Route::get('/pacientes', function () {
+        return view('pacientes.index');
+    })->name('pacientes.index');
+
+    Route::get('/ordenes', function () {
+        return view('ordenes.index');
+    })->name('ordenes.index');
+
+    Route::get('/muestras', function () {
+        return view('muestras.index');
+    })->name('muestras.index');
+
+    Route::get('/resultados', function () {
+        return view('resultados.index');
+    })->name('resultados.index');
+
+        Route::prefix('pacientes')->group(function () {
         Route::get('/', [PacienteController::class, 'index'])->name('pacientes.index');
         Route::get('/crear', [PacienteController::class, 'create'])->name('pacientes.create');
         Route::post('/', [PacienteController::class, 'store'])->name('pacientes.store');
@@ -40,20 +54,18 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{paciente}', [PacienteController::class, 'update'])->name('pacientes.update');
         Route::delete('/{paciente}', [PacienteController::class, 'destroy'])->name('pacientes.destroy');
     });
-
-    // ==================== TIPOS DE ANÁLISIS ====================
-    Route::prefix('tipos-analisis')->group(function () {
-        Route::get('/', [TipoAnalisisController::class, 'index'])->name('tipos-analisis.index');
-        Route::get('/crear', [TipoAnalisisController::class, 'create'])->name('tipos-analisis.create');
-        Route::post('/', [TipoAnalisisController::class, 'store'])->name('tipos-analisis.store');
-        Route::get('/{tiposAnalisis}', [TipoAnalisisController::class, 'show'])->name('tipos-analisis.show');
-        Route::get('/{tiposAnalisis}/editar', [TipoAnalisisController::class, 'edit'])->name('tipos-analisis.edit');
-        Route::put('/{tiposAnalisis}', [TipoAnalisisController::class, 'update'])->name('tipos-analisis.update');
-        Route::delete('/{tiposAnalisis}', [TipoAnalisisController::class, 'destroy'])->name('tipos-analisis.destroy');
+        Route::prefix('muestras')->group(function () {
+        Route::get('/', [MuestraController::class, 'index'])->name('muestras.index');
+        Route::get('/{muestra}', [MuestraController::class, 'show'])->name('muestras.show');
+        Route::get('/{muestra}/editar', [MuestraController::class, 'edit'])->name('muestras.edit');
+        Route::put('/{muestra}', [MuestraController::class, 'update'])->name('muestras.update');
+        Route::delete('/{muestra}', [MuestraController::class, 'destroy'])->name('muestras.destroy');
+        
+        // Rutas adicionales para muestras
+        Route::get('/pendientes', [MuestraController::class, 'pendientes'])->name('muestras.pendientes');
+        Route::post('/{muestra}/asignar-tecnico', [MuestraController::class, 'asignarTecnico'])->name('muestras.asignar-tecnico');
     });
-
-    // ==================== ÓRDENES DE ANÁLISIS ====================
-    Route::prefix('ordenes-analisis')->group(function () {
+     Route::prefix('ordenes-analisis')->group(function () {
         Route::get('/', [OrdenAnalisisController::class, 'index'])->name('ordenes-analisis.index');
         Route::get('/crear', [OrdenAnalisisController::class, 'create'])->name('ordenes-analisis.create');
         Route::post('/', [OrdenAnalisisController::class, 'store'])->name('ordenes-analisis.store');
@@ -65,18 +77,10 @@ Route::middleware(['auth'])->group(function () {
         // Rutas adicionales para órdenes
         Route::post('/{orden}/cambiar-estado', [OrdenAnalisisController::class, 'cambiarEstado'])->name('ordenes-analisis.cambiar-estado');
     });
-
-    // ==================== MUESTRAS ====================
-    Route::prefix('muestras')->group(function () {
-        Route::get('/', [MuestraController::class, 'index'])->name('muestras.index');
-        Route::get('/{muestra}', [MuestraController::class, 'show'])->name('muestras.show');
-        Route::get('/{muestra}/editar', [MuestraController::class, 'edit'])->name('muestras.edit');
-        Route::put('/{muestra}', [MuestraController::class, 'update'])->name('muestras.update');
-        Route::delete('/{muestra}', [MuestraController::class, 'destroy'])->name('muestras.destroy');
-        
-        // Rutas adicionales para muestras
-        Route::get('/pendientes', [MuestraController::class, 'pendientes'])->name('muestras.pendientes');
-        Route::post('/{muestra}/asignar-tecnico', [MuestraController::class, 'asignarTecnico'])->name('muestras.asignar-tecnico');
-    });
-
-    });
+    
+    // Rutas adicionales para resultados
+Route::get('/resultados/pendientes', [ResultadoController::class, 'pendientesValidacion'])->name('resultados.pendientes');
+Route::post('/resultados/{resultado}/validar', [ResultadoController::class, 'validarResultado'])->name('resultados.validar');
+Route::get('/resultados/{resultado}/reporte', [ResultadoController::class, 'generarReporte'])->name('resultados.reporte');
+Route::get('/resultados/buscar', [ResultadoController::class, 'buscar'])->name('resultados.buscar');
+});
